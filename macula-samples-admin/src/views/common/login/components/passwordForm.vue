@@ -56,8 +56,8 @@
       return {
         userType: 'admin',
         form: {
-          user: "admin",
-          password: "admin",
+          user: "13802347985",
+          password: "111222",
           autologin: false
         },
         rules: {
@@ -96,9 +96,9 @@
           username: this.form.user,
           password: this.form.password,
           grant_type: 'password',
-          client_id: 'e2fa7e64-249b-46f0-ae1d-797610e88615',
+          client_id: 'cbs_test_client',
           client_secret: 'secret',
-          scope: 'message.read message.write userinfo'
+          scope: 'all'
         }
         //获取token
         var user = await this.$API.common_auth.systemToken.post({}, {

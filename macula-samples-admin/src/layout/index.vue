@@ -317,7 +317,7 @@ export default {
       map && map.forEach(item => {
         item.meta = item.meta ? item.meta : {};
         //处理隐藏
-        if (!item.meta.visible || item.meta.type == "BUTTON") {
+        if (item.meta.hidden || item.meta.type == "BUTTON") {
           return false
         }
         //处理http

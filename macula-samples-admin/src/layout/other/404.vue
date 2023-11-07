@@ -40,7 +40,10 @@ export default {
       this.$router.go(-1);
     },
     gologin() {
-      this.$router.push("/login");
+      this.$TOOL.cookie.remove("TOKEN")
+        this.$TOOL.data.clear()
+        window.location.href = import.meta.env.VITE_APP_LOGOUT_PATH
+        //this.$router.replace({path: '/login'});
     }
   }
 }

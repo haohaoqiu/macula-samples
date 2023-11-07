@@ -84,9 +84,11 @@
         confirmButtonText: '退出',
         confirmButtonClass: 'el-button--danger'
         }).then(() => {
+        this.$TOOL.cookie.remove("TOKEN")
         this.$TOOL.data.clear()
         this.clearTenantOptions()
-        this.$router.replace({path: '/login'});
+        window.location.href = import.meta.env.VITE_APP_LOGOUT_PATH
+        //this.$router.replace({path: '/login'});
         }).catch(() => {
         //取消退出
         })

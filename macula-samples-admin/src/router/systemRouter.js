@@ -46,7 +46,14 @@ const routes = [
         meta: {
             title: "重置密码"
         }
-    }
+    },
+	{
+		path: "/callback",
+		component: () => import(/* webpackChunkName: "callback" */ '@/views/common/login/callback'),
+		meta: {
+			title: "登录回调组件"
+		}
+	}
 ]
 
 export default routes;

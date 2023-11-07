@@ -3,7 +3,7 @@ import http from "@/utils/request"
 
 export default {
     systemToken: {
-        url: `${config.IAM_URL}/oauth2/token`,
+        url: `${config.IAM_URL}/oauth/token`,
         name: "macula V5 system提供隐式获取登录token接口",
         post: async function (data = {}, config = {}) {
             return await http.post(this.url, data, config)

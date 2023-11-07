@@ -14,8 +14,159 @@
   - See the License for the specific language governing permissions and
   - limitations under the License.
   -->
-
-<template>
+  <template>
+  </template>
+  <script>
+  import { useTenantStore } from '@/stores/tenant';
+  import { mapActions } from 'pinia';
+  export default{
+      name: "login",
+      data(){
+          return {
+  
+          }
+      },
+      methods: {
+          ...mapActions(useTenantStore, ['pushTenantOptions', 'updateTenantLabel', 'updateTenantId', 'clearTenantOptions']),
+          goToLogin(logout){
+              this.$TOOL.data.clear()
+              let token = this.$TOOL.cookie.get("TOKEN");
+              if(token){
+                  this.$TOOL.cookie.remove("TOKEN")
+              }
+              if(logout){
+                  window.location.href = import.meta.env.VITE_APP_LOGOUT_PATH
+              }else{
+                  window.location.href = import.meta.env.VITE_APP_LOGIN_PATH
+              }
+              
+          },
+          // 处理初次登录和过期或主动重新登录
+          handlerLoginPage(){
+              if(this.$route.params.logout){
+                  this.goToLogin(true)
+                  return true
+              }
+              let token = this.$TOOL.cookie.get("TOKEN");
+              if(!token){
+                  this.goToLogin()
+                  return true
+              }
+              return false
+          },
+          // 过滤权限菜单
+          authMenu(routes, roles, menu, parentPath){
+              if(!routes || routes.length === 0){
+                  return;
+              }
+              routes.forEach(route => {
+                  if(this.haveSame(route.meta.roles, roles)){
+                      if(route.meta.type =='IFRAME'){
+                          parentPath = parentPath ? (parentPath.indexOf("/") == 0 ? parentPath : "/" + parentPath) : "";
+                          if(parentPath.length > 0){
+                              parentPath = parentPath.lastIndexOf("/") == (parentPath.length -1) ? parentPath.substring(0, parentPath.length -1) : parentPath
+                          }
+                          route.meta.parentPath = parentPath;
+                      }
+                      let innerRoute = JSON.parse(JSON.stringify(route))
+                      if(route.children){
+                          innerRoute.children = []
+                          this.authMenu(route.children, roles, innerRoute.children, route.path)
+                      }
+                      menu.push(innerRoute)
+                  }
+              })
+          },
+          // 判断两数组是否有相同元素, true: 存在相同 false：没相同
+          haveSame(arr, otherArr) {
+              // 合并数组
+              const normalArr = [...arr, ...otherArr]
+              // 合并数组并去重
+              const setArr = [...new Set(normalArr)]
+              return normalArr.length !== setArr.length
+          },
+          // 加载我的信息角色、权限
+          async loadMe(){
+              var userInfo = await this.$API.common_auth.getUserInfo.get()
+              if (userInfo.code && userInfo.code === '00000') {
+                  this.$TOOL.data.set("USER_INFO", userInfo.data)
+                  this.$TOOL.data.set("PERMISSIONS", userInfo.data.perms)
+                  return true
+              } else {
+                  ElMessage.warning(userInfo.message)
+                  this.goToLogin(true)
+                  return false
+              }
+          },
+          // 加载菜单并过滤我的权限菜单
+          async loadMenu(){
+              // 处理菜单
+              // 用户的角色是否包含路由返回菜单对应的角色
+              var res = await this.$API.common_auth.getRoutes.get()
+              var menu = []
+              if(res.code && res.code === '00000'){
+                  let userInfo = this.$TOOL.data.get("USER_INFO")
+                  var routes = res.data
+                  var roles = userInfo.roles
+                  this.authMenu(routes, roles, menu)
+                  this.$TOOL.data.set("MENU", menu)
+                  return true
+              } else {
+                  ElMessage.warning(res.message)
+                  this.goToLogin(true)
+                  return false
+              }
+          },
+          // 加载我的租户权限
+          async loadTenant(){
+              //获取我的租户列表
+              var tenantOptionsRes = await this.$API.system_tenant.tenant.options.get()
+              if (tenantOptionsRes.code && tenantOptionsRes.code === '00000') {
+                  if(tenantOptionsRes.data.length == 0){
+                      ElMessageBox.alert("当前用户无任何菜单权限，请联系系统管理员", "无权限访问", {
+                          type: 'error',
+                          center: true,
+                          callback: (action)=>{
+                              this.goToLogin(true)
+                          }
+                      })
+                      return false
+                  }
+                  this.clearTenantOptions()
+                  this.pushTenantOptions(tenantOptionsRes.data)
+                  this.updateTenantId(tenantOptionsRes.data[0].value)
+                  this.updateTenantLabel(tenantOptionsRes.data[0].label)
+                  return true
+              } else {
+                  ElMessage.warning(res.message)
+                  this.goToLogin(true)
+                  return false
+              }
+          },
+          async initUser(){
+              const loading = ElLoading.service({ fullscreen: true })
+              let success = true
+              success = await this.loadMe()
+              if(!success) return
+              success = await this.loadMenu()
+              if(!success) return
+              //success = await this.loadTenant()
+              //if(!success) return
+              loading.close()
+              ElMessage.success("Login Success 登录成功")
+              this.$router.push({ path: '/' })
+          }
+      },
+      async created(){
+          if(!this.handlerLoginPage()){
+              await this.initUser()
+          } 
+      }
+  }
+  </script>
+  <style>
+  </style>
+<!-- <template>
   <div class="login_bg">
     <div class="login_adv" style="background-image: url(/img/auth_banner.jpg);">
       <div class="login_adv__title">
@@ -412,4 +563,4 @@ export default {
     display: none;
   }
 }
-</style>
+</style> -->

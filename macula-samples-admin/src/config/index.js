@@ -80,6 +80,7 @@ const DEFAULT_CONFIG = {
         system: 'system',
         oss: 'oss',
         admin: 'admin',
+        service2: 'service2'
     },
 
     //控制台首页默认布局
